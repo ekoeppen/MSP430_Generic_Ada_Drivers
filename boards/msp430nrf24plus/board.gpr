@@ -1,0 +1,36 @@
+project Board extends "../../common/common.gpr" is
+
+   RTS := external ("Runtime", "null");
+   HAL_Dir := "drivers";
+   Linker_File := "msp430g2553.ld";
+
+   for Source_Dirs use (
+      PWD,
+      Root & "msp430x2/msp430g2553/svd/",
+      Root & "msp430x2/msp430g2553/",
+      Root & "msp430x2/",
+      Root & "common/",
+      Root & HAL_Dir,
+      Root & "boards/msp_exp430g2/",
+      Root & "drivers/");
+
+   for Create_Missing_Dirs use "true";
+   for Main use ("main");
+   for Object_Dir use PWD & "msp430nrf24plus";
+   for Exec_Dir use PWD & "msp430nrf24plus";
+
+   package Compiler extends Common.Compiler is
+      for Default_Switches ("Ada") use
+         Common.Compiler'Default_Switches ("ada") & (
+            "-mmcu=msp430g2553");
+   end Compiler;
+
+   package Linker extends Common.Linker is
+      for Default_Switches ("Ada") use
+         Common.Linker'Default_Switches ("ada") & (
+            "-mmcu=msp430g2553",
+            "-T" & Linker_File,
+            "-L" & Root & "msp430x2/msp430g2553");
+   end Linker;
+
+end Board;

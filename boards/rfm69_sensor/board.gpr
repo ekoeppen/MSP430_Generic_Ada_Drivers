@@ -1,0 +1,37 @@
+project Board extends "../../common/common.gpr" is
+
+   RTS := external ("Runtime", "null");
+   HAL_Dir := "drivers";
+   Linker_File := "msp430g2553.ld";
+
+   for Source_Dirs use (
+      PWD,
+      Root & "msp430x2/msp430g2553/svd/",
+      Root & "msp430x2/msp430g2553/",
+      Root & "msp430x2/",
+      Root & "common/",
+      Root & HAL_Dir,
+      Root & "boards/rfm69_sensor",
+      Root & "drivers/");
+
+   for Create_Missing_Dirs use "true";
+   for Main use ("main");
+   for Object_Dir use PWD & "rfm69_sensor";
+   for Exec_Dir use PWD & "rfm69_sensor";
+   for Runtime ("Ada") use RTS;
+
+   package Compiler extends Common.Compiler is
+      for Default_Switches ("Ada") use
+         Common.Compiler'Default_Switches ("ada") & (
+            "-mmcu=msp430g2553");
+   end Compiler;
+
+   package Linker extends Common.Linker is
+      for Default_Switches ("Ada") use
+         Common.Linker'Default_Switches ("ada") & (
+            "-mmcu=msp430g2553", "-lgcc", "-lmul_none", "-lc",
+            "-T" & Linker_File,
+            "-L" & Root & "msp430x2/msp430g2553");
+   end Linker;
+
+end Board;

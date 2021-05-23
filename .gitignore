@@ -3,3 +3,13 @@
 
 # Ada Library Information
 *.ali
+
+*.stderr
+*.stdout
+b__*.*
+*.elf
+*.bexch
+
+obj
+exe
+lib
