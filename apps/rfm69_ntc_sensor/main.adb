@@ -48,10 +48,34 @@ procedure Main is
 
    TX_Data : Radio.Packet_Type;
    TX_Data_Index : Radio.Packet_Size_Type;
-   --  Info_D : Storage_Array (1 .. 16#0100#)
-   --    with Import, Convention => Asm, External_Name => "__info_start";
 
-   Node_ID : aliased String (1 .. 4) with Import, Convention => Asm, External_Name => "__info_start";
+   type Config_Record_Type is
+      record
+         Node_ID : String (1 .. 4);
+         Version : String (1 .. 3);
+         TX_Power : Radio.Output_Power_Type;
+         TX_Interval : Unsigned_8;
+      end record;
+
+   Config_Record : aliased Config_Record_Type with Import, Convention => Asm, External_Name => "__info_start";
+
+   function TX_Power return Radio.Output_Power_Type is
+   begin
+      if Config_Record.TX_Power < Radio.Output_Power_Type'First then
+         return Radio.Output_Power_Type'First;
+      elsif Config_Record.TX_Power > Radio.Output_Power_Type'Last then
+         return Radio.Output_Power_Type'Last;
+      end if;
+      return Radio.Output_Power_Type (Config_Record.TX_Power);
+   end TX_Power;
+
+   function TX_Interval return Unsigned_16 is
+   begin
+      if Config_Record.TX_Interval = 0 then
+         return 1;
+      end if;
+      return Unsigned_16 (Config_Record.TX_Interval);
+   end TX_Interval;
 
    procedure Write_Data (Data : Unsigned_8) is
    begin
@@ -133,7 +157,7 @@ procedure Main is
          TX_Data_Index := Radio.Packet_Size_Type'First;
          CBOR.Encode_Tag (Sensor_Reading_Tag);
          CBOR.Encode_Array (3);
-         CBOR.Encode_Byte_String (Node_ID);
+         CBOR.Encode_Byte_String (Config_Record.Node_ID);
          CBOR.Encode_Tag (Voltage_Tag);
          CBOR.Encode_Decimal_Fraction (Integer (Voltage), -3);
          CBOR.Encode_Tag (Temperature_Tag);
@@ -152,9 +176,11 @@ begin
    Delay_Clock.Init;
    SSEL.Set;
    Text_IO.Put_Line ("RFM69 sender starting...");
-   Text_IO.Put_Line ("Node: " & Node_ID);
+   Text_IO.Put ("Node: " & Config_Record.Node_ID & " Interval: ");
+   Text_IO.Put_Integer (Integer (Config_Record.TX_Interval));
+   Text_IO.New_Line;
    Radio.Init;
-   Radio.Set_Output_Power (-3);
+   Radio.Set_Output_Power (TX_Power);
    Print_Registers;
-   Transmit_Loop (60);
+   Transmit_Loop (TX_Interval);
 end Main;
