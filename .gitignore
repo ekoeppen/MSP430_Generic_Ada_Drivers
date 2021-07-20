@@ -8,6 +8,7 @@
 *.stdout
 b__*.*
 *.elf
+*.hex
 *.bexch
 
 obj
